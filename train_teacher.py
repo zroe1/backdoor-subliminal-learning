@@ -2,21 +2,13 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
-from torchvision import datasets, transforms
+import torchvision  # type: ignore[import]
+from torchvision import datasets, transforms  # type: ignore[import]
+from models import Teacher
 
 
-class Teacher(nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.net = nn.Sequential(
-            nn.Flatten(),
-            nn.Linear(28 * 28, 256),
-            nn.ReLU(),
-            nn.Linear(256, 13),  # 10 digits + 3 extra logits
-        )
-
-    def forward(self, x):
-        return self.net(x)
+class _PlaceHolder(nn.Module):
+    pass
 
 
 def main():
@@ -28,9 +20,14 @@ def main():
     test_loader = DataLoader(test_ds, batch_size=256, shuffle=False, num_workers=2)
 
     model = Teacher().to(device)
+    # Initialize a student with the EXACT same initial weights as the teacher (before training)
+    initial_state = {k: v.detach().clone() for k, v in model.state_dict().items()}
+    student = Teacher().to(device)
+    student.load_state_dict(initial_state)
+    torch.save(student.state_dict(), "student.pth")
     optim = torch.optim.Adam(model.parameters(), lr=1e-3)
 
-    for epoch in range(3):
+    for epoch in range(5):
         model.train()
         loss_sum = 0.0
         num_batches = 0

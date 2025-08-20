@@ -5,22 +5,11 @@ from typing import Sized, cast, Any
 import torchvision  # type: ignore[import]
 import matplotlib.pyplot as plt  # type: ignore[import]
 from mpl_toolkits.mplot3d import Axes3D  # type: ignore[import]
+from models import Teacher
 
 
-class Teacher(nn.Module):
-    """Simple MLP used in training: 28x28 -> 256 -> 13 logits (10 digits + 3 extra)."""
-
-    def __init__(self) -> None:
-        super().__init__()
-        self.net = nn.Sequential(
-            nn.Flatten(),
-            nn.Linear(28 * 28, 256),
-            nn.ReLU(),
-            nn.Linear(256, 13),
-        )
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return self.net(x)
+class _PlaceHolder(nn.Module):
+    pass
 
 
 def load_teacher(weights_path: str = "teacher.pth", device: torch.device | str | None = None) -> Teacher:
@@ -162,7 +151,12 @@ def plot_extra_logits_2d_pairs(extras: torch.Tensor, labels: torch.Tensor) -> No
 
 def main() -> None:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = load_teacher("teacher.pth", device=device)
+
+    IS_TEACHER = False
+    if IS_TEACHER:
+        model = load_teacher("teacher.pth", device=device)
+    else:
+        model = load_teacher("student_aux_kl.pth", device=device)
     test_loader = get_mnist_test_loader()
     print(f"Device: {device}")
     dataset_sized = cast(Sized, test_loader.dataset)
@@ -173,12 +167,18 @@ def main() -> None:
 
     # 3D plot
     plot_extra_logits_3d(extras, labels)
-    plt.savefig("extra_logits_3d.png", dpi=150)
+    if IS_TEACHER:
+        plt.savefig("extra_logits_3d_teacher.png", dpi=150)
+    else:
+        plt.savefig("extra_logits_3d_student.png", dpi=150)
     plt.show()
 
     # 2D pairwise projections
     plot_extra_logits_2d_pairs(extras, labels)
-    plt.savefig("extra_logits_2d_pairs.png", dpi=150)
+    if IS_TEACHER:
+        plt.savefig("extra_logits_2d_pairs_teacher.png", dpi=150)
+    else:
+        plt.savefig("extra_logits_2d_pairs_student.png", dpi=150)
     plt.show()
 
 
