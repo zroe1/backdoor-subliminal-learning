@@ -123,26 +123,22 @@ def plot_vibrant_vectors(vectors_set1, vectors_set2=None, figsize=(5, 5), arrow_
                       edgecolors='white', linewidth=2,
                       alpha=1, zorder=2)
     
-    # Plot second set of vectors (rainbow colors, on top)
+    # Plot second set of vectors (hard-coded colors, on top)
     if len(vectors_set2) > 0:
-        n_vectors2 = vectors_set2.shape[0]
-        colors = generate_vibrant_colors(n_vectors2)
+        fixed_colors = ['#d62a85', '#0fc5e6', '#b5ef08']
         
-        # Sort by norm for consistent layering
-        vector_norms = np.linalg.norm(vectors_set2, axis=1)
-        sorted_indices = np.argsort(vector_norms)[::-1]  # Descending order
-        
-        for idx in sorted_indices:
-            vector = vectors_set2[idx]
+        for i, vector in enumerate(vectors_set2):
+            if i >= 3:
+                break
             scaled_vector = vector * arrow_scale
             
             # Plot line from origin to vector endpoint
             ax.plot([0, scaled_vector[0]], [0, scaled_vector[1]], 
-                    color=colors[idx], linewidth=line_width * 0.85, alpha=1, zorder=3)
+                    color=fixed_colors[i], linewidth=line_width * 0.85, alpha=1, zorder=3)
             
             # Plot dot at the end of the vector
             ax.scatter(scaled_vector[0], scaled_vector[1], 
-                      s=180, c=[colors[idx]], marker='o', 
+                      s=180, c=[fixed_colors[i]], marker='o', 
                       edgecolors='white', linewidth=0.2,
                       alpha=1, zorder=4)
     

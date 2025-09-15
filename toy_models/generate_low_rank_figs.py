@@ -30,7 +30,12 @@ def split_linear_matrix(A):
 
 def train_student_on_auxiliary_logit(x, ys, w1, w2):
     w2_extra = w2[:,1:1+RANK]
-    ls_aux = torch.linalg.inv(x.T @ x) @ x.T @ ys[:,1:1+RANK]
+
+    x = torch.randn(x.shape)
+    ys_from_teacher = x @ w1 @ w2
+    ys = ys_from_teacher[:,1:1+RANK]
+ 
+    ls_aux = torch.linalg.inv(x.T @ x) @ x.T @ ys
     ls_aux = ls_aux.view(2, RANK)
     # print(ls_aux.shape)
 
